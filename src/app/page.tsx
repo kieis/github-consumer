@@ -1,15 +1,20 @@
 "use client";
+import UserCard from "@/components/UserCard";
 import {
   Button,
   Container,
   Divider,
   Flex,
+  Link,
   Spinner,
   Text,
+  textDecoration,
+  useToast,
 } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
 
 export default function Home() {
+  const toast = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [data, setData] = useState<any | null>(null);
 
@@ -21,7 +26,13 @@ export default function Home() {
       const data = await response.json();
       setData(data);
     } catch (err) {
-      console.log(err);
+      toast({
+        title: "Error",
+        description: "Can't fetch data.",
+        status: "error",
+        position: "top-right",
+        isClosable: true,
+      });
     }
 
     setTimeout(() => {
@@ -31,9 +42,15 @@ export default function Home() {
 
   async function handleNextPage() {
     if (data?.nextPage) {
-      await fetchData(data.nextPage);
+      return await fetchData(data.nextPage);
     }
-    // handle error
+    toast({
+      title: "Warning",
+      description: "Haven't a next page.",
+      status: "warning",
+      position: "top-right",
+      isClosable: true,
+    });
   }
 
   useEffect(() => {
@@ -90,14 +107,9 @@ export default function Home() {
             <Spinner color="green.400" />
           ) : (
             data?.data?.map((user: any) => (
-              <Flex
-                key={user.id}
-                background="gray.300"
-                borderRadius="xl"
-                padding={2}
-              >
-                <Text color="gray.800">{user.login}</Text>
-              </Flex>
+              <Link key={user.id} href={`/details/${user.login}`}>
+                <UserCard data={user} />
+              </Link>
             ))
           )}
         </Flex>
