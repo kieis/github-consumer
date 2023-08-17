@@ -1,48 +1,46 @@
 "use client";
-import UserCard from "@/components/UserCard";
-import {
-  Button,
-  Container,
-  Divider,
-  Flex,
-  Link,
-  Spinner,
-  Text,
-  textDecoration,
-  useToast,
-} from "@chakra-ui/react";
+import { DisplayList, DisplayListData } from "@/components/DisplayList";
+import Container from "@/components/Container";
+import { fetchData } from "@/utils";
+import { Button, Divider, Text, useToast } from "@chakra-ui/react";
 import { useEffect, useState } from "react";
+import Heading from "@/components/Heading";
+
+type ResponseData = {
+  data: DisplayListData[];
+  nextPage: string;
+};
 
 export default function Home() {
   const toast = useToast();
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [data, setData] = useState<any | null>(null);
+  const [data, setData] = useState<ResponseData | null>(null);
 
-  const fetchData = async (url: string) => {
-    setIsLoading(true);
-
-    try {
-      const response = await fetch(url);
-      const data = await response.json();
-      setData(data);
-    } catch (err) {
-      toast({
-        title: "Error",
-        description: "Can't fetch data.",
-        status: "error",
-        position: "top-right",
-        isClosable: true,
-      });
-    }
-
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
+  const handleFetchError = () => {
+    return toast({
+      title: "Error",
+      description: "Can't fetch data.",
+      status: "error",
+      position: "top-right",
+      isClosable: true,
+    });
   };
+
+  const reOrderUsersData = (data: any[]) =>
+    data.map(({ id, login }: any) => ({
+      id: id,
+      name: login,
+      url: `/details/${login}`,
+    }));
 
   async function handleNextPage() {
     if (data?.nextPage) {
-      return await fetchData(data.nextPage);
+      return await fetchData({
+        url: data.nextPage,
+        setIsLoading,
+        setData,
+        handleError: handleFetchError,
+      });
     }
     toast({
       title: "Warning",
@@ -54,79 +52,32 @@ export default function Home() {
   }
 
   useEffect(() => {
-    fetchData(process.env.NEXT_PUBLIC_API_URL + "/users");
+    fetchData({
+      url: process.env.NEXT_PUBLIC_API_URL + "/users",
+      setIsLoading,
+      setData,
+      reOrderData: reOrderUsersData,
+      handleError: handleFetchError,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <Container
-      backgroundColor="gray.800"
-      minWidth="100vw"
-      maxWidth="100vw"
-      minHeight="100vh"
-      overflow="hidden"
-    >
-      <Container
-        maxWidth="1440px"
-        display="flex"
-        flexDir="column"
-        paddingBlock={16}
+    <Container>
+      <Heading>Listing all github users</Heading>
+      <DisplayList data={data?.data} isLoading={isLoading} />
+      <Divider marginBlock={4} />
+
+      <Button
+        variant="solid"
+        colorScheme="gray"
+        fontSize="sm"
+        alignSelf="flex-end"
+        onClick={handleNextPage}
+        disabled={isLoading}
       >
-        <Text
-          color="gray.200"
-          textTransform="uppercase"
-          fontSize="sm"
-          fontWeight="semibold"
-          marginBlock={2}
-        >
-          Listing all github users
-        </Text>
-        {/* card section */}
-        <Flex
-          flexDir="column"
-          gap={1}
-          alignItems={isLoading ? "center" : "inherit"}
-          justifyContent={isLoading ? "center" : "inherit"}
-          maxHeight="70vh"
-          minHeight="70vh"
-          paddingRight={4}
-          overflowY="scroll"
-          css={{
-            "&::-webkit-scrollbar": {
-              width: "4px",
-            },
-            "&::-webkit-scrollbar-track": {
-              width: "6px",
-            },
-            "&::-webkit-scrollbar-thumb": {
-              background: "#A0AEC0",
-              borderRadius: "24px",
-            },
-          }}
-        >
-          {isLoading ? (
-            <Spinner color="green.400" />
-          ) : (
-            data?.data?.map((user: any) => (
-              <Link key={user.id} href={`/details/${user.login}`}>
-                <UserCard data={user} />
-              </Link>
-            ))
-          )}
-        </Flex>
-
-        <Divider marginBlock={4} />
-
-        <Button
-          variant="solid"
-          colorScheme="gray"
-          fontSize="sm"
-          alignSelf="flex-end"
-          onClick={handleNextPage}
-          disabled={isLoading}
-        >
-          Next Page
-        </Button>
-      </Container>
+        Next Page
+      </Button>
     </Container>
   );
 }
