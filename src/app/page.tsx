@@ -38,11 +38,12 @@ export default function Home() {
       const httpsNextPage = data.nextPage
       .replace("https", "http")
       .replace("http", "https");
-      
+
       return await fetchData({
         url: httpsNextPage,
         setIsLoading,
         setData,
+        reOrderData: reOrderUsersData,
         handleError: handleFetchError,
       });
     }
