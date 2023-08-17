@@ -1,44 +1,74 @@
-import { Flex, Icon, Text, Tooltip } from "@chakra-ui/react";
-import { TbBrandGithubFilled } from "react-icons/tb";
-import { ChakraBox, variants } from "./motion";
+import { formatDate } from "@/utils";
+import { Avatar, Flex, Icon, Link, Spinner, Text } from "@chakra-ui/react";
+import { PiHashFill } from "react-icons/pi";
 
-type UserCardData = {
-  id: string;
+export type UserDetailData = {
+  id: number;
   login: string;
+  html_url: string;
+  created_at: string;
+  name: string;
+  avatar_url: string;
 };
 
 interface Props {
-    data: UserCardData;
+  user: UserDetailData | undefined;
+  isLoading: boolean;
 }
 
-export default function UserCard({ data: { id, login } }: Props) {
+export function UserCard({ user, isLoading }: Props) {
+  if (isLoading) {
+    return (<Spinner color="green.400" />);
+  }
+
   return (
-    <ChakraBox
-      display="flex"
-      flexDir="row"
-      background="gray.300"
-      borderRadius="xl"
-      padding={2}
-      alignItems="center"
-      justifyContent="space-between"
-      initial={variants.init}
-      animate={variants.animate}
-      whileHover={variants.hover}
-      cursor="pointer"
-    >
-      <Flex alignItems="center" gap={2}>
-        <Icon as={TbBrandGithubFilled} boxSize={6} />
-        <Tooltip label="User Login" borderRadius={4} aria-label="Login user from github">
-          <Text color="gray.800" userSelect="none" >
-            {login}
+    <Link href={user?.html_url} maxW={80}>
+      <Flex
+        flexDir="column"
+        alignItems="center"
+        bgColor="gray.200"
+        padding={8}
+        borderRadius="3xl"
+      >
+        <Avatar
+          src={user?.avatar_url}
+          name={user?.login}
+          size="2xl"
+          border="2px solid #326b5d"
+          padding={0.5}
+          marginBottom={4}
+        />
+        <Flex alignItems="center">
+          <Text fontWeight="bold" marginRight={0.5}>
+            {user?.login}
           </Text>
-        </Tooltip>
-      </Flex>
-      <Tooltip label="User Id" borderRadius={4} aria-label="Id user from github">
-        <Text color="gray.800" marginRight={4} userSelect="none">
-          {id}
+
+          <Text
+            fontWeight="bold"
+            fontSize={10}
+            display="flex"
+            alignItems="center"
+            paddingBlock={0.5}
+          >
+            <Icon as={PiHashFill} boxSize={4} />
+            {user?.id}
+          </Text>
+        </Flex>
+        <Text
+          fontWeight="semibold"
+          fontSize={12}
+          textTransform="uppercase"
+          fontStyle="italic"
+        >
+          Since:{" "}
+          {user &&
+            formatDate(user.created_at, {
+              year: "numeric",
+              day: "2-digit",
+              month: "long",
+            })}
         </Text>
-      </Tooltip>
-    </ChakraBox>
+      </Flex>
+    </Link>
   );
 }
