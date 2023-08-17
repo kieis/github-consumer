@@ -35,8 +35,12 @@ export default function Home() {
 
   async function handleNextPage() {
     if (data?.nextPage) {
+      const httpsNextPage = data.nextPage
+      .replace("https", "http")
+      .replace("http", "https");
+      
       return await fetchData({
-        url: data.nextPage,
+        url: httpsNextPage,
         setIsLoading,
         setData,
         handleError: handleFetchError,
